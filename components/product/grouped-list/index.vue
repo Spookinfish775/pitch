@@ -7,7 +7,7 @@
         :product-data="product"
       />
     </div>
-    <div class="loading">
+    <div class="loading" v-if="isLoading">
       <v-progress-circular
         :size="50"
         color="primary"
@@ -38,11 +38,13 @@ export default {
         'filters[limit]': 50,
         'filters[offset]': 50,
       },
+      isLoading: false,
     }
   },
   methods: {
     async onChange(entry) {
       if (entry.isIntersecting) {
+        this.isLoading = true
         const {
           data: {
             data: { products },
@@ -56,6 +58,7 @@ export default {
           'filters[offset]': this.productsCurrent.length,
         }
         this.productsCurrent.push(...products)
+        this.isLoading = false
       }
     },
   },
