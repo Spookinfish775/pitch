@@ -2,8 +2,8 @@
   <div class="wrap">
     <div class="grouped-list-wrapper">
       <ProductCard
-        v-for="product in receivedProducts"
-        :key="product.id"
+        v-for="(product, index) in productsCurrent"
+        :key="index"
         :product-data="product"
       />
     </div>
@@ -14,6 +14,7 @@
         indeterminate
       ></v-progress-circular>
     </div>
+    <observer @on-change="onChange" />
   </div>
 </template>
 
@@ -22,6 +23,7 @@ export default {
   name: 'ProductGroupedList',
   components: {
     ProductCard: () => import('~/components/product/card/index.vue'),
+    Observer: () => import('vue-intersection-observer'),
   },
   props: {
     productList: {
@@ -31,12 +33,31 @@ export default {
   },
   data() {
     return {
-      receivedProducts: [...this.productList],
+      productsCurrent: [...this.productList],
       getParams: {
         'filters[limit]': 50,
         'filters[offset]': 50,
       },
     }
+  },
+  methods: {
+    async onChange(entry) {
+      if (entry.isIntersecting) {
+        const {
+          data: {
+            data: { products },
+          },
+        } = await this.$axios.get(this.$dataApi.products, {
+          params: this.getParams,
+        })
+
+        this.getParams = {
+          'filters[limit]': 50,
+          'filters[offset]': this.productsCurrent.length,
+        }
+        this.productsCurrent.push(...products)
+      }
+    },
   },
 }
 </script>
